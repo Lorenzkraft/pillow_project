@@ -8,8 +8,8 @@ import io
 
 class HeaderSlideCreator:
     def __init__(self, 
-                 background_image_path = "light_background.png", 
-                 logo_path = "logo_howai_dark_blue.png"):
+                 background_image_path = "./Backgrounds/light_background.png", 
+                 logo_path = "./logos/logo_howai_dark_blue.png"):
         self.im = Image.open(background_image_path)
         self.width = self.im.width
         self.height = self.im.height
@@ -56,8 +56,8 @@ class HeaderSlideCreator:
 
 class ListSlideCreator:
     def __init__(self,
-                 background_image_path="brain_shine_gradient_canvas.png",
-                 logo_path="logo_howai.png"):
+                 background_image_path="./Backgrounds/brain_shine_gradient_canvas.png",
+                 logo_path="./logos/logo_howai.png"):
         self.background_image_path = background_image_path
         self.logo = Image.open(logo_path).convert("RGBA")
         self.font_items_path = "arial.ttf"
@@ -173,7 +173,7 @@ class ListSlideCreator:
 
 class CodeSlideCreator:
     def __init__(self, 
-                 background_image_path = "gradient canvas.png", 
+                 background_image_path = "./Backgrounds/gradient canvas.png", 
                  font_name='Consolas', 
                  font_size=80,
                  min_width=2500,  # Added minimum width parameter
@@ -282,9 +282,9 @@ class CodeSlideCreator:
         )
 
         # Open the logo images
-        logo_howai = Image.open("logo_howai.png")
+        logo_howai = Image.open("./logos/logo_howai.png")
         logo_howai = logo_howai.resize((int(logo_howai.width * 0.5), int(logo_howai.height * 0.5)))
-        logo_lang = Image.open(f"{language}_logo.png")
+        logo_lang = Image.open(f"./logos/{language}_logo.png")
         logo_lang = logo_lang.resize((int(logo_lang.width * 0.9), int(logo_lang.height * 0.9)))
 
         # Composite the rectangle layer
@@ -313,9 +313,9 @@ class CodeSlideCreator:
 
 class ImageSlideCreator:
     def __init__(self,
-                 background_image_path="light_background.png",
-                 logo_light_path="logo_howai.png",
-                 logo_dark_path="logo_howai_dark_blue.png"):
+                 background_image_path="./Backgrounds/light_background.png",
+                 logo_light_path="./logos/logo_howai.png",
+                 logo_dark_path="./logos/logo_howai_dark_blue.png"):
         """
         Initialize the slide creator with background and logo images
         
