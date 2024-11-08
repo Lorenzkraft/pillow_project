@@ -17,9 +17,9 @@ for (let i = 0; i < 10; i++) {
 
 ###mydiv
 ### List Header
-- first item :blush:
-- second item
-- third item
+- :zap: first item 
+- :zap: second item
+- :zap: third item
 
 
 # pip install bs4
