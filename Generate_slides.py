@@ -5,6 +5,7 @@ from pygments.lexers import PythonLexer, get_lexer_by_name
 from pygments.formatters import ImageFormatter
 from pygments.styles import get_style_by_name
 import io
+import emoji
 
 class HeaderSlideCreator:
     def __init__(self, 
@@ -155,7 +156,9 @@ class ListSlideCreator:
         # Then draw the items with gradient
         for item in list_items:
             bbox = font_items.getbbox(item)
-            draw_mask.text((0, y_position), item, font=font_items, fill=255)
+            draw_mask.text((0, y_position), 
+                           emoji.emojize(item, language='alias'),#item, 
+                           font=font_items, fill=255)
             y_position += bbox[3] - bbox[1] + 250
 
         # Create final gradient text

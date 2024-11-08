@@ -1,6 +1,6 @@
 # Create Venv
 
-```python python code
+```python
 print("Hello, world!")
 for i in range(10):
     print(i)
@@ -17,7 +17,7 @@ for (let i = 0; i < 10; i++) {
 
 ###mydiv
 ### List Header
-- first item
+- first item :blush:
 - second item
 - third item
 
