@@ -1,11 +1,12 @@
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageStat
-#import PIL
+from pilmoji import Pilmoji
 from pygments import highlight
 from pygments.lexers import PythonLexer, get_lexer_by_name
 from pygments.formatters import ImageFormatter
 from pygments.styles import get_style_by_name
 import io
 import emoji
+from typing import Optional
 
 class HeaderSlideCreator:
     def __init__(self, 
@@ -56,123 +57,97 @@ class HeaderSlideCreator:
     
 
 class ListSlideCreator:
-    def __init__(self,
-                 background_image_path="./Backgrounds/brain_shine_gradient_canvas.png",
-                 logo_path="./logos/logo_howai.png"):
-        self.background_image_path = background_image_path
-        self.logo = Image.open(logo_path).convert("RGBA")
-        self.font_items_path = "arial.ttf"
-        self.fontsize_items = 250
-        self.font_header_path = "arialbd.ttf"
-        self.fontsize_header = 300
+    def __init__(
+        self,
+        Background_path: str = "./Backgrounds/Background_dark.png",
+        header_font_path: str = "./fonts/arialbd.ttf",
+        body_font_path: str = "./fonts/arial.ttf",
+        header_font_size: int = 300,
+        body_font_size: int = 250,
+        text_color: tuple[int, int, int, int] = (255, 255, 255, 255),
+        header_position: tuple[int, int] = (100, 100),
+        first_item_position: tuple[int, int] = (300, 600),
+        item_spacing: int = 400
+    ):
+        """
+        Initialize the SlideGenerator with customizable parameters.
+        
+        Args:
+            header_font_path: Path to the font file for headers
+            body_font_path: Path to the font file for body text
+            header_font_size: Font size for headers
+            body_font_size: Font size for body text
+            text_color: RGBA color tuple for text
+            header_position: (x, y) position for header text
+            first_item_position: (x, y) position for first list item
+            item_spacing: Vertical spacing between list items
+        """
+        self.background = Image.open(Background_path)
+        self.header_font = ImageFont.truetype(header_font_path, header_font_size)
+        self.body_font = ImageFont.truetype(body_font_path, body_font_size)
+        self.text_color = text_color
+        self.header_position = header_position
+        self.first_item_position = first_item_position
+        self.item_spacing = item_spacing
 
-    def create_gradient_text_image(self, text, font, start_color, end_color, width, height):
-        # Create a gradient background
-        gradient_image = Image.new("RGB", (width, height), start_color)
+    def create_slide(
+        self,
+        #background: Image.Image,
+        header_text: str,
+        list_items: list,
+        custom_text_color: Optional[tuple[int, int, int, int]] = None
+    ) -> Image.Image:
+        """
+        Create a slide with header and list items.
         
-        # Create a horizontal gradient mask
-        gradient_mask = Image.new("L", (width, height))
-        for x in range(width):
-            gradient_value = int(255 * (x / width))
-            ImageDraw.Draw(gradient_mask).line([(x, 0), (x, height)], fill=gradient_value)
+        Args:
+            background: PIL Image object to use as background
+            header_text: Text to display as header
+            list_items: List of items to display
+            custom_text_color: Optional custom text color for this specific slide
+            
+        Returns:
+            PIL Image object with the generated slide
+        """
+        # Convert background to RGBA if it isn't already
+        background = self.background.convert("RGBA")
         
-        # Blend start and end colors across the width
-        gradient_text = Image.composite(gradient_image, Image.new("RGB", (width, height), end_color), gradient_mask)
+        # Make a copy to avoid modifying the original
+        slide = background.copy()
         
-        # Draw the text mask
-        text_mask = Image.new("L", (width, height), 0)
-        draw_text_mask = ImageDraw.Draw(text_mask)
-        draw_text_mask.text((0, 0), text, font=font, fill=255)
+        # Use custom text color if provided, otherwise use default
+        text_color = custom_text_color or self.text_color
         
-        # Apply the text mask to the gradient
-        gradient_text_with_mask = Image.new("RGBA", (width, height), (255, 255, 255, 0))
-        gradient_text_with_mask.paste(gradient_text, (0, 0), text_mask)
-        return gradient_text_with_mask
-
-    def create_slide(self, header_text, list_items):
-        # Load background image
-        background = Image.open(self.background_image_path).convert("RGBA")
+        # Create drawing object
+        draw = ImageDraw.Draw(slide)
         
-        # Define fonts
-        font_header = ImageFont.truetype(self.font_header_path, self.fontsize_header)
-        font_items = ImageFont.truetype(self.font_items_path, self.fontsize_items)
-        
-        # Create header text with gradient
-        bbox = font_header.getbbox(header_text)
-        header_width = bbox[2] - bbox[0]
-        header_height = bbox[3] - bbox[1] + 300
-        gradient_header = self.create_gradient_text_image(
+        # Draw header
+        draw.text(
+            self.header_position,
             header_text,
-            font_header,
-            (255, 255, 255),
-            (83, 234, 205),
-            header_width,
-            header_height
+            font=self.header_font,
+            fill=text_color
         )
         
-        # Position header on background
-        header_x = background.width // 20
-        header_y = 100
-        background.paste(gradient_header, (header_x, header_y), gradient_header)
-
-        # Calculate maximum item width and total height needed
-        max_width = 0
-        total_height = 0
-        for item in list_items:
-            bbox = font_items.getbbox(item)
-            max_width = max(max_width, bbox[2] - bbox[0])
-            total_height += bbox[3] - bbox[1] + 250  # height + spacing
-
-        # Create a single gradient for all list items
-        list_gradient = Image.new("RGB", (max_width, total_height), (255, 255, 255))
-        gradient_mask = Image.new("L", (max_width, total_height))
-        for x in range(max_width):
-            gradient_value = int(255 * (x / max_width))
-            ImageDraw.Draw(gradient_mask).line([(x, 0), (x, total_height)], fill=gradient_value)
+        # Draw list items with emoji support
+        for i, item in enumerate(list_items):
+            # Convert emoji aliases to Unicode
+            item = emoji.emojize(item.strip(), language='alias')
+            
+            # Calculate position for current item
+            x, y = self.first_item_position
+            current_y = y + (i * self.item_spacing)
+            
+            # Draw item with emoji support
+            with Pilmoji(slide) as pilmoji:
+                pilmoji.text(
+                    (x, current_y),
+                    item,
+                    text_color,
+                    self.body_font
+                )
         
-        gradient_overlay = Image.composite(
-            Image.new("RGB", (max_width, total_height), (255, 255, 255)),
-            Image.new("RGB", (max_width, total_height), (83, 234, 205)),
-            gradient_mask
-        )
-        
-        # Create a mask for all text
-        text_mask = Image.new("L", (max_width, total_height), 0)
-        draw_mask = ImageDraw.Draw(text_mask)
-        
-        # Draw list items into the mask
-        draw = ImageDraw.Draw(background)
-        x_position = background.width // 7.5
-        y_position = 0
-        
-        # First draw the ">" symbols directly on background
-        y_pos_arrow = header_y + header_height
-        for item in list_items:
-            draw.text((x_position - font_items.getbbox(">")[2] - 50, y_pos_arrow), 
-                     ">", font=font_items, fill=(83, 234, 205))
-            bbox = font_items.getbbox(item)
-            y_pos_arrow += bbox[3] - bbox[1] + 250
-
-        # Then draw the items with gradient
-        for item in list_items:
-            bbox = font_items.getbbox(item)
-            draw_mask.text((0, y_position), 
-                           emoji.emojize(item, language='alias'),#item, 
-                           font=font_items, fill=255)
-            y_position += bbox[3] - bbox[1] + 250
-
-        # Create final gradient text
-        gradient_items = Image.new("RGBA", (max_width, total_height), (255, 255, 255, 0))
-        gradient_items.paste(gradient_overlay, (0, 0), text_mask)
-        
-        # Paste the list items gradient onto the background
-        background.paste(gradient_items, (int(x_position), header_y + header_height), gradient_items)
-        
-        # Add logo
-        self.logo = self.logo.resize((712, 176))
-        background.paste(self.logo, (0, background.height - 200), self.logo)
-        
-        return background
+        return slide
 
 class CodeSlideCreator:
     def __init__(self, 
